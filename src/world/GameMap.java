@@ -1,47 +1,106 @@
 package world;
 
 public class GameMap {
+
     private final char[][] tiles;
-    private final int tileSize=50;
-    private final int portalC=13,portalR=11;
-    public GameMap() {
-        String[] rows= {
-            "###############","#.............#","#.B..B.B.B.B..#","#.B..B.B.B.B..#","#.B..B.B..B...#","#.BB..B...B...#","#.............#","#.............#","#.#.#.#.#.#.#.#","#B.B.B.B.B.B.B#","#.#...#...#.#.#","#............G#","###############"
+
+    private final int tileSize = 50;
+
+    private int portalC = -1;
+    private int portalR = -1;
+
+    // Constructor dùng map TXT
+    public GameMap(char[][] data) {
+
+        if (data == null || data.length == 0) {
+            throw new IllegalArgumentException("Map không được rỗng");
         }
-        ;
-        tiles=new char[rows.length][rows[0].length()];
-        for(int r=0;r<rows.length;r++)tiles[r]=rows[r].toCharArray();
-        tiles[1][1]='.';
+
+        int cols = data[0].length;
+
+        tiles = new char[data.length][cols];
+        for (int r = 0; r < data.length; r++) {
+            for (int c = 0; c < cols; c++) {
+
+                char tile = data[r][c];
+
+                switch (tile) {
+
+                    case 'P':
+                    case 'E':
+                    case 'C':
+                        // Player và enemy không phải vật cản
+                        tiles[r][c] = '.';
+                        break;
+
+                    case 'O':
+                        // Portal
+                        tiles[r][c] = 'O';
+                        portalC = c;
+                        portalR = r;
+                        break;
+
+                    default:
+                        tiles[r][c] = tile;
+                        break;
+                }
+            }
+        }
     }
-    public char get(int c,int r) {
-        if(r<0||r>=tiles.length||c<0||c>=tiles[0].length)return '#';
+
+
+    public char get(int c, int r) {
+
+        if (r < 0 || r >= tiles.length
+                || c < 0 || c >= tiles[0].length) {
+            return '#';
+        }
+
         return tiles[r][c];
     }
-    public void set(int c,int r,char v) {
-        if(r>=0&&r<tiles.length&&c>=0&&c<tiles[0].length)tiles[r][c]=v;
+
+    public void set(int c, int r, char v) {
+
+        if (r >= 0 && r < tiles.length
+                && c >= 0 && c < tiles[0].length) {
+
+            tiles[r][c] = v;
+        }
     }
-    public boolean isWalkable(int c,int r) {
-        char t=get(c,r);
-        return t=='.'||t=='G';
+
+    public boolean isWalkable(int c, int r) {
+
+        char t = get(c, r);
+
+        return t == '.'
+                || t == 'G'
+                || t == 'O';
     }
+
     public int rows() {
         return tiles.length;
     }
+
     public int cols() {
         return tiles[0].length;
     }
+
     public int tileSize() {
         return tileSize;
     }
+
     public int pixelWidth() {
-        return cols()*tileSize;
+        return cols() * tileSize;
     }
+
     public int pixelHeight() {
-        return rows()*tileSize;
+        return rows() * tileSize;
     }
+
     public int portalCol() {
         return portalC;
     }
+
     public int portalRow() {
         return portalR;
     }
