@@ -8,6 +8,8 @@ import javafx.scene.text.Font;
 import world.GameMap;
 import entities.Bomb;
 import entities.Enemy;
+import entities.Bomber;
+import world.Portal;
 
 public class GameView extends Canvas {
     private final GameManager game;
@@ -57,14 +59,11 @@ public class GameView extends Canvas {
                 }
 
                 if (tile == 'G') {
-                    g.setFill(game.getEnemies().isEmpty()
-                            ? Color.LIMEGREEN
-                            : Color.web("#475569"));
-                    g.fillOval(x + 7, y + 7, t - 14, t - 14);
-
-                    g.setFill(Color.WHITE);
-                    g.setFont(Font.font(16));
-                    g.fillText("EXIT", x + 5, y + t / 2 + 5);
+                    if (game.getEnemies().isEmpty()) {
+                        g.drawImage(Portal.OPEN_IMAGE, x, y, t, t);
+                    } else {
+                        g.drawImage(Portal.CLOSED_IMAGE, x, y, t, t);
+                    }
                 }
             }
         }
@@ -87,44 +86,45 @@ public class GameView extends Canvas {
 
         // Vẽ bom
         for (Bomb b : game.getBombs()) {
-            g.setFill(Color.BLACK);
-            g.fillOval(b.col * t + 7, b.row * t + 7, t - 14, t - 14);
-
-            g.setFill(Color.ORANGE);
-            g.fillOval(b.col * t + t / 2 - 3, b.row * t + 5, 6, 6);
+            g.drawImage(
+                    Bomb.IMAGE,
+                    b.col * t,
+                    b.row * t,
+                    t,
+                    t
+            );
         }
 
-        // Vẽ lửa
+        // Flames
         for (GameManager.Flame f : game.getFlames()) {
-            g.setFill(Color.rgb(255, 90, 0, 0.8));
-            g.fillRect(f.col * t + 3, f.row * t + 3, t - 6, t - 6);
-
-            g.setFill(Color.YELLOW);
-            g.fillRect(f.col * t + 10, f.row * t + 10, t - 20, t - 20);
+            g.drawImage(
+                    GameManager.Flame.IMAGE,
+                    f.col * t,
+                    f.row * t,
+                    t,
+                    t
+            );
         }
 
         // Vẽ kẻ địch
         for (Enemy e : game.getEnemies()) {
-            g.setFill(Color.CRIMSON);
-            g.fillRoundRect(e.col * t + 5, e.row * t + 5, t - 10, t - 10, 10, 10);
-
-            g.setFill(Color.WHITE);
-            g.fillOval(e.col * t + 10, e.row * t + 12, 6, 6);
-            g.fillOval(e.col * t + 23, e.row * t + 12, 6, 6);
+            g.drawImage(
+                    Enemy.IMAGE,
+                    e.x * t,
+                    e.y * t,
+                    t,
+                    t
+            );
         }
 
         // Vẽ nhân vật bằng tọa độ double để di chuyển mượt
+        // Vẽ Bomber
         var p = game.getPlayer();
 
         double px = p.x * t;
         double py = p.y * t;
 
-        g.setFill(Color.web("#38BDF8"));
-        g.fillRoundRect(px + 5, py + 4, t - 10, t - 8, 10, 10);
-
-        g.setFill(Color.WHITE);
-        g.fillOval(px + 11, py + 10, 6, 6);
-        g.fillOval(px + 23, py + 10, 6, 6);
+        g.drawImage(Bomber.IMAGE, px, py, t, t);
 
         // Vẽ HUD
         g.setFill(Color.web("#0F172A"));

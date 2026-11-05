@@ -2,7 +2,7 @@ package world;
 
 public class GameMap {
     private final char[][] tiles;
-    private final int tileSize=40;
+    private final int tileSize=50;
     private final int portalC=13,portalR=11;
     public GameMap() {
         String[] rows= {

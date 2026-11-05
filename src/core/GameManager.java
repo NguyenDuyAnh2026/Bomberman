@@ -6,7 +6,7 @@ import entities.Bomb;
 import entities.Enemy;
 import utils.InputHandler;
 import world.GameMap;
-
+import javafx.scene.image.Image;
 import java.util.*;
 
 public class GameManager {
@@ -171,7 +171,30 @@ public class GameManager {
         for (Enemy e : enemies) {
             e.timer -= dt;
 
-            if (e.timer <= 0) {
+            // Nếu Enemy đang di chuyển tới ô mục tiêu
+            if (e.moving) {
+                double dx = e.targetCol - e.x;
+                double dy = e.targetRow - e.y;
+
+                double distance = Math.sqrt(dx * dx + dy * dy);
+                double step = e.moveSpeed * dt;
+
+                if (distance <= step) {
+                    e.x = e.targetCol;
+                    e.y = e.targetRow;
+
+                    e.col = e.targetCol;
+                    e.row = e.targetRow;
+
+                    e.moving = false;
+                } else {
+                    e.x += dx / distance * step;
+                    e.y += dy / distance * step;
+                }
+            }
+
+            // Chỉ chọn hướng mới khi Enemy đã tới ô đích
+            if (!e.moving && e.timer <= 0) {
                 int[][] dirs = {
                         {1, 0},
                         {-1, 0},
@@ -185,8 +208,9 @@ public class GameManager {
                 int ny = e.row + d[1];
 
                 if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
-                    e.col = nx;
-                    e.row = ny;
+                    e.targetCol = nx;
+                    e.targetRow = ny;
+                    e.moving = true;
                 }
 
                 e.timer = 0.45 + random.nextDouble() * 0.4;
@@ -380,6 +404,9 @@ public class GameManager {
     }
 
     public static class Flame {
+        public static final Image IMAGE = new Image(
+                Flame.class.getResourceAsStream("/images/flame.png")
+        );
         public final int col, row;
         public double timer = 0.55;
 
