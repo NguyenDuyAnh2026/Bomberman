@@ -59,7 +59,7 @@ public class GameView extends Canvas {
                     g.strokeLine(x + t / 2, y + 5, x + t / 2, y + t - 5);
                 }
 
-                if (tile == 'G') {
+                if (tile == 'O') {
                     if (game.getEnemies().isEmpty()) {
                         g.drawImage(Portal.OPEN_IMAGE, x, y, t, t);
                     } else {

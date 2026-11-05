@@ -1,6 +1,7 @@
 
 package core;
 
+import utils.SoundManager;
 import entities.Bomber;
 import entities.Bomb;
 import entities.ChasingEnemy;
@@ -8,12 +9,17 @@ import entities.Enemy;
 import utils.InputHandler;
 import world.GameMap;
 import javafx.scene.image.Image;
+import world.MapLoader;
+
 import java.util.*;
 
 public class GameManager {
     private GameMap map;
     private Bomber player;
-
+    private int currentLevel = 1;
+    private int playerStartCol = 1;
+    private int playerStartRow = 1;
+    private final int MAX_LEVEL = 3;
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Bomb> bombs = new ArrayList<>();
     private final List<Flame> flames = new ArrayList<>();
@@ -31,34 +37,8 @@ public class GameManager {
     }
 
     public void restart() {
-        map = new GameMap();
-        player = new Bomber(1, 1);
-
-        enemies.clear();
-        bombs.clear();
-        flames.clear();
-        pickups.clear();
-
-        state = GameState.PLAYING;
-        bombCooldown = 0;
-        spaceWasDown = false;
-
-        int[][] spots = {
-                {11, 1},
-                {13, 5},
-                {7, 11}
-        };
-
-        for (int[] s : spots) {
-            if (map.isWalkable(s[0], s[1])) {
-                enemies.add(new Enemy(s[0], s[1]));
-            }
-        }
-
-// Enemy mới chuyên đuổi theo người chơi
-        if (map.isWalkable(13, 11)) {
-            enemies.add(new ChasingEnemy(13, 11));
-        }
+        currentLevel = 1;
+        loadLevel("resources/map/map1.txt");
     }
 
     public void update(double dt, InputHandler input) {
@@ -288,13 +268,14 @@ public class GameManager {
             }
         }
 
-        // ===== KIỂM TRA THẮNG =====
+
+        // ===== KIỂM TRA CHUYỂN MÀN =====
 
         if (enemies.isEmpty()
                 && player.col == map.portalCol()
                 && player.row == map.portalRow()) {
 
-            state = GameState.WON;
+            nextLevel();
         }
     }
 
@@ -318,8 +299,11 @@ public class GameManager {
     }
 
     private void explode(Bomb b) {
+        SoundManager.playBomb();
+
         addFlame(b.col, b.row);
 
+        // Phần logic nổ bom còn lại giữ nguyên
         int[][] dirs = {
                 {1, 0},
                 {-1, 0},
@@ -376,6 +360,8 @@ public class GameManager {
             Pickup p = it.next();
 
             if (p.col == c && p.row == r) {
+                SoundManager.playPickup();
+
                 switch (p.type) {
                     case "BOMB":
                         player.maxBombs++;
@@ -450,6 +436,70 @@ public class GameManager {
             row = r;
         }
     }
+
+//loadlevel
+private void loadLevel(String filePath) {
+    char[][] data = MapLoader.loadMap(filePath);
+
+    map = new GameMap(data);
+
+    enemies.clear();
+    bombs.clear();
+    flames.clear();
+    pickups.clear();
+
+    player = null;
+
+    for (int row = 0; row < data.length; row++) {
+        for (int col = 0; col < data[row].length; col++) {
+
+            char tile = data[row][col];
+
+            switch (tile) {
+                case 'P':
+                    player = new Bomber(col, row);
+
+                    playerStartCol = col;
+                    playerStartRow = row;
+                    break;
+
+                case 'E':
+                    enemies.add(new Enemy(col, row));
+                    break;
+
+                case 'C':
+                    enemies.add(new ChasingEnemy(col, row));
+                    break;
+
+            }
+        }
+    }
+
+    if (player == null) {
+        throw new RuntimeException(
+                "Map không có vị trí Player: " + filePath
+        );
+    }
+
+    bombCooldown = 0;
+    spaceWasDown = false;
+
+    state = GameState.PLAYING;
+}
+
+    public void nextLevel() {
+        if (currentLevel >= MAX_LEVEL) {
+            state = GameState.WON;
+            return;
+        }
+
+        currentLevel++;
+
+        loadLevel(
+                "resources/map/map" + currentLevel + ".txt"
+        );
+    }
+
 
     public static class Pickup {
         public final int col, row;
