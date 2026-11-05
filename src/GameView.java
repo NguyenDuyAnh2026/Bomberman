@@ -1,6 +1,7 @@
 
 import core.GameManager;
 import core.GameState;
+import entities.ChasingEnemy;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -105,16 +106,28 @@ public class GameView extends Canvas {
                     t
             );
         }
-
-        // Vẽ kẻ địch
+        // Vẽ enemy
         for (Enemy e : game.getEnemies()) {
-            g.drawImage(
-                    Enemy.IMAGE,
-                    e.x * t,
-                    e.y * t,
-                    t,
-                    t
-            );
+
+            if (e instanceof ChasingEnemy) {
+                // Enemy đuổi người chơi
+                g.drawImage(
+                        ChasingEnemy.IMAGE,
+                        e.x * t,
+                        e.y * t,
+                        t,
+                        t
+                );
+            } else {
+                // Enemy thường
+                g.drawImage(
+                        Enemy.IMAGE,
+                        e.x * t,
+                        e.y * t,
+                        t,
+                        t
+                );
+            }
         }
 
         // Vẽ nhân vật bằng tọa độ double để di chuyển mượt

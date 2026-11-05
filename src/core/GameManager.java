@@ -3,6 +3,7 @@ package core;
 
 import entities.Bomber;
 import entities.Bomb;
+import entities.ChasingEnemy;
 import entities.Enemy;
 import utils.InputHandler;
 import world.GameMap;
@@ -45,14 +46,18 @@ public class GameManager {
         int[][] spots = {
                 {11, 1},
                 {13, 5},
-                {7, 11},
-                {13, 11}
+                {7, 11}
         };
 
         for (int[] s : spots) {
             if (map.isWalkable(s[0], s[1])) {
                 enemies.add(new Enemy(s[0], s[1]));
             }
+        }
+
+// Enemy mới chuyên đuổi theo người chơi
+        if (map.isWalkable(13, 11)) {
+            enemies.add(new ChasingEnemy(13, 11));
         }
     }
 
@@ -171,7 +176,7 @@ public class GameManager {
         for (Enemy e : enemies) {
             e.timer -= dt;
 
-            // Nếu Enemy đang di chuyển tới ô mục tiêu
+            // Enemy đang di chuyển mượt đến ô mục tiêu
             if (e.moving) {
                 double dx = e.targetCol - e.x;
                 double dy = e.targetRow - e.y;
@@ -193,31 +198,61 @@ public class GameManager {
                 }
             }
 
-            // Chỉ chọn hướng mới khi Enemy đã tới ô đích
+            // Chỉ chọn hướng mới khi đã đến ô đích
             if (!e.moving && e.timer <= 0) {
-                int[][] dirs = {
-                        {1, 0},
-                        {-1, 0},
-                        {0, 1},
-                        {0, -1}
-                };
+                // Enemy mới đuổi trực tiếp người chơi
+                if (e instanceof ChasingEnemy) {
+                    int playerCol = (int) Math.round(player.x);
+                    int playerRow = (int) Math.round(player.y);
 
-                int[] d = dirs[random.nextInt(4)];
+                    int dx = playerCol - e.col;
+                    int dy = playerRow - e.row;
 
-                int nx = e.col + d[0];
-                int ny = e.row + d[1];
+                    int nx = e.col;
+                    int ny = e.row;
 
-                if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
-                    e.targetCol = nx;
-                    e.targetRow = ny;
-                    e.moving = true;
+                    // Ưu tiên đi theo trục có khoảng cách lớn hơn
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        nx += Integer.signum(dx);
+                    } else if (dy != 0) {
+                        ny += Integer.signum(dy);
+                    } else if (dx != 0) {
+                        nx += Integer.signum(dx);
+                    }
+
+                    if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
+                        e.targetCol = nx;
+                        e.targetRow = ny;
+                        e.moving = true;
+                    }
+
+                    e.timer = 0.2;
                 }
 
-                e.timer = 0.45 + random.nextDouble() * 0.4;
+                // Enemy thường vẫn di chuyển ngẫu nhiên
+                else {
+                    int[][] dirs = {
+                            {1, 0},
+                            {-1, 0},
+                            {0, 1},
+                            {0, -1}
+                    };
+
+                    int[] d = dirs[random.nextInt(4)];
+
+                    int nx = e.col + d[0];
+                    int ny = e.row + d[1];
+
+                    if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
+                        e.targetCol = nx;
+                        e.targetRow = ny;
+                        e.moving = true;
+                    }
+
+                    e.timer = 0.45 + random.nextDouble() * 0.4;
+                }
             }
         }
-
-        // ===== LỬA TRÚNG NHÂN VẬT =====
 
         for (Flame f : flames) {
             if (player.col == f.col && player.row == f.row) {
