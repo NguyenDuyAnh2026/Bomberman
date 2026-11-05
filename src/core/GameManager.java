@@ -1,6 +1,7 @@
 
 package core;
 
+import utils.SoundManager;
 import entities.Bomber;
 import entities.Bomb;
 import entities.Enemy;
@@ -283,8 +284,11 @@ public class GameManager {
     }
 
     private void explode(Bomb b) {
+        SoundManager.playBomb();
+
         addFlame(b.col, b.row);
 
+        // Phần logic nổ bom còn lại giữ nguyên
         int[][] dirs = {
                 {1, 0},
                 {-1, 0},
@@ -341,6 +345,8 @@ public class GameManager {
             Pickup p = it.next();
 
             if (p.col == c && p.row == r) {
+                SoundManager.playPickup();
+
                 switch (p.type) {
                     case "BOMB":
                         player.maxBombs++;

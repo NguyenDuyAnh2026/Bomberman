@@ -1,4 +1,5 @@
 import core.GameManager;
+import utils.SoundManager;
 import core.GameState;
 import javafx.animation.AnimationTimer;
 import javafx.scene.layout.StackPane;
@@ -38,6 +39,7 @@ public class GameController {
         return root;
     }
     public void start() {
+        SoundManager.startBackgroundMusic();
         loop=new AnimationTimer() {
             public void handle(long now) {
                 if(last==0) last=now;
