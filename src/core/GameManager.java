@@ -426,7 +426,7 @@ public class GameManager {
 
     public static class Flame {
         public static final Image IMAGE = new Image(
-                Flame.class.getResourceAsStream("/images/flame.png")
+                Flame.class.getResourceAsStream("/images/flame3.png")
         );
         public final int col, row;
         public double timer = 0.55;
