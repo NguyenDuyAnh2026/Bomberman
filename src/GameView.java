@@ -11,6 +11,8 @@ import entities.Bomb;
 import entities.Enemy;
 import entities.Bomber;
 import world.Portal;
+import world.Wall;
+import world.Brick;
 
 public class GameView extends Canvas {
 
@@ -81,54 +83,36 @@ public class GameView extends Canvas {
 
                 char tile = map.get(c, r);
 
-                // Nền map
+                // Vẽ nền
                 g.setFill((r + c) % 2 == 0
                         ? Color.web("#334155")
                         : Color.web("#293548"));
 
                 g.fillRect(x, y, t, t);
 
-
-                // Wall
+// Vẽ Wall với texture ngẫu nhiên đã lưu trong GameMap
                 if (tile == '#') {
-
-                    g.setFill(Color.web("#64748B"));
-                    g.fillRoundRect(
-                            x + 2, y + 2,
-                            t - 4, t - 4,
-                            5, 5
+                    g.drawImage(
+                            map.getWallImage(c, r),
+                            x,
+                            y,
+                            t,
+                            t
                     );
-
-                    g.setFill(Color.web("#94A3B8"));
-                    g.fillRect(x + 4, y + 4, t - 8, 5);
                 }
 
-
-                // Brick
+// Vẽ Brick
                 if (tile == 'B') {
-
-                    g.setFill(Color.web("#B45309"));
-                    g.fillRoundRect(
-                            x + 3, y + 3,
-                            t - 6, t - 6,
-                            4, 4
-                    );
-
-                    g.setStroke(Color.web("#FBBF24"));
-
-                    g.strokeLine(
-                            x + 5, y + t / 2,
-                            x + t - 5, y + t / 2
-                    );
-
-                    g.strokeLine(
-                            x + t / 2, y + 5,
-                            x + t / 2, y + t - 5
+                    g.drawImage(
+                            Brick.IMAGE,
+                            x,
+                            y,
+                            t,
+                            t
                     );
                 }
 
-
-                // Portal
+// Vẽ Portal
                 if (tile == 'O') {
 
                     if (game.getEnemies().isEmpty()) {
@@ -144,34 +128,15 @@ public class GameView extends Canvas {
         // ================= VẼ PICKUP =================
 
         for (GameManager.Pickup p : game.getPickups()) {
-
-            g.setFill(
-                    p.type.equals("LIFE") ? Color.PINK :
-                            p.type.equals("FLAME") ? Color.ORANGE :
-                                    p.type.equals("SPEED") ? Color.CYAN :
-                                            Color.GOLD
-            );
-
-            g.fillOval(
-                    p.col * t + 10,
-                    p.row * t + 10,
-                    t - 20,
-                    t - 20
-            );
-
-            g.setFill(Color.BLACK);
-            g.setFont(Font.font(12));
-
-            g.fillText(
-                    p.type.substring(0, 1),
-                    p.col * t + 17,
-                    p.row * t + 25
+            g.drawImage(
+                    p.getImage(),
+                    p.col * t,
+                    p.row * t,
+                    t,
+                    t
             );
         }
-
-
-        // ================= VẼ BOMB =================
-
+        // Vẽ bom
         for (Bomb b : game.getBombs()) {
 
             g.drawImage(

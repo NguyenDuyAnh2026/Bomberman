@@ -502,6 +502,23 @@ private void loadLevel(String filePath) {
 
 
     public static class Pickup {
+
+        public static final Image BOMB_IMAGE = new Image(
+                Pickup.class.getResourceAsStream("/images/bombup.png")
+        );
+
+        public static final Image FLAME_IMAGE = new Image(
+                Pickup.class.getResourceAsStream("/images/flameup.png")
+        );
+
+        public static final Image SPEED_IMAGE = new Image(
+                Pickup.class.getResourceAsStream("/images/speedup.png")
+        );
+
+        public static final Image LIFE_IMAGE = new Image(
+                Pickup.class.getResourceAsStream("/images/lifeup.png")
+        );
+
         public final int col, row;
         public final String type;
 
@@ -509,6 +526,21 @@ private void loadLevel(String filePath) {
             col = c;
             row = r;
             type = t;
+        }
+
+        public Image getImage() {
+            switch (type) {
+                case "BOMB":
+                    return BOMB_IMAGE;
+                case "FLAME":
+                    return FLAME_IMAGE;
+                case "SPEED":
+                    return SPEED_IMAGE;
+                case "LIFE":
+                    return LIFE_IMAGE;
+                default:
+                    return null;
+            }
         }
     }
 }
