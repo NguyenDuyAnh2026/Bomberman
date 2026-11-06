@@ -1,5 +1,5 @@
 package world;
-
+import javafx.scene.image.Image;
 public class GameMap {
 
     private final char[][] tiles;
@@ -8,7 +8,7 @@ public class GameMap {
 
     private int portalC = -1;
     private int portalR = -1;
-
+    private final Image[][] wallImages;
     // Constructor dùng map TXT
     public GameMap(char[][] data) {
 
@@ -19,22 +19,21 @@ public class GameMap {
         int cols = data[0].length;
 
         tiles = new char[data.length][cols];
+        wallImages = new Image[data.length][cols];
+
         for (int r = 0; r < data.length; r++) {
             for (int c = 0; c < cols; c++) {
 
                 char tile = data[r][c];
 
                 switch (tile) {
-
                     case 'P':
                     case 'E':
                     case 'C':
-                        // Player và enemy không phải vật cản
                         tiles[r][c] = '.';
                         break;
 
                     case 'O':
-                        // Portal
                         tiles[r][c] = 'O';
                         portalC = c;
                         portalR = r;
@@ -43,6 +42,11 @@ public class GameMap {
                     default:
                         tiles[r][c] = tile;
                         break;
+                }
+
+                // Random ảnh tường một lần khi tạo map
+                if (tile == '#') {
+                    wallImages[r][c] = Wall.randomImage();
                 }
             }
         }
@@ -77,6 +81,9 @@ public class GameMap {
                 || t == 'O';
     }
 
+    public Image getWallImage(int c, int r) {
+        return wallImages[r][c];
+    }
     public int rows() {
         return tiles.length;
     }

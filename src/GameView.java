@@ -11,6 +11,8 @@ import entities.Bomb;
 import entities.Enemy;
 import entities.Bomber;
 import world.Portal;
+import world.Wall;
+import world.Brick;
 
 public class GameView extends Canvas {
     private final GameManager game;
@@ -37,28 +39,36 @@ public class GameView extends Canvas {
                 double y = r * t;
                 char tile = map.get(c, r);
 
+                // Vẽ nền
                 g.setFill((r + c) % 2 == 0
                         ? Color.web("#334155")
                         : Color.web("#293548"));
+
                 g.fillRect(x, y, t, t);
 
+// Vẽ Wall với texture ngẫu nhiên đã lưu trong GameMap
                 if (tile == '#') {
-                    g.setFill(Color.web("#64748B"));
-                    g.fillRoundRect(x + 2, y + 2, t - 4, t - 4, 5, 5);
-
-                    g.setFill(Color.web("#94A3B8"));
-                    g.fillRect(x + 4, y + 4, t - 8, 5);
+                    g.drawImage(
+                            map.getWallImage(c, r),
+                            x,
+                            y,
+                            t,
+                            t
+                    );
                 }
 
+// Vẽ Brick
                 if (tile == 'B') {
-                    g.setFill(Color.web("#B45309"));
-                    g.fillRoundRect(x + 3, y + 3, t - 6, t - 6, 4, 4);
-
-                    g.setStroke(Color.web("#FBBF24"));
-                    g.strokeLine(x + 5, y + t / 2, x + t - 5, y + t / 2);
-                    g.strokeLine(x + t / 2, y + 5, x + t / 2, y + t - 5);
+                    g.drawImage(
+                            Brick.IMAGE,
+                            x,
+                            y,
+                            t,
+                            t
+                    );
                 }
 
+// Vẽ Portal
                 if (tile == 'O') {
                     if (game.getEnemies().isEmpty()) {
                         g.drawImage(Portal.OPEN_IMAGE, x, y, t, t);
@@ -71,20 +81,14 @@ public class GameView extends Canvas {
 
         // Vẽ vật phẩm
         for (GameManager.Pickup p : game.getPickups()) {
-            g.setFill(
-                    p.type.equals("LIFE") ? Color.PINK :
-                            p.type.equals("FLAME") ? Color.ORANGE :
-                                    p.type.equals("SPEED") ? Color.CYAN :
-                                            Color.GOLD
+            g.drawImage(
+                    p.getImage(),
+                    p.col * t,
+                    p.row * t,
+                    t,
+                    t
             );
-
-            g.fillOval(p.col * t + 10, p.row * t + 10, t - 20, t - 20);
-
-            g.setFill(Color.BLACK);
-            g.setFont(Font.font(12));
-            g.fillText(p.type.substring(0, 1), p.col * t + 17, p.row * t + 25);
         }
-
         // Vẽ bom
         for (Bomb b : game.getBombs()) {
             g.drawImage(
