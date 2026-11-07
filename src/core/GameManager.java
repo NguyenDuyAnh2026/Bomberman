@@ -19,7 +19,7 @@ public class GameManager {
     private int currentLevel = 1;
     private int playerStartCol = 1;
     private int playerStartRow = 1;
-    private final int MAX_LEVEL = 3;
+    private final int MAX_LEVEL = 4;
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Bomb> bombs = new ArrayList<>();
     private final List<Flame> flames = new ArrayList<>();
@@ -441,7 +441,9 @@ public class GameManager {
 private void loadLevel(String filePath) {
     char[][] data = MapLoader.loadMap(filePath);
 
-    map = new GameMap(data);
+// currentLevel tương ứng mùa:
+// 1 = Spring, 2 = Summer, 3 = Autumn, 4 = Winter
+    map = new GameMap(data, currentLevel);
 
     enemies.clear();
     bombs.clear();

@@ -19,6 +19,10 @@ public class GameView extends Canvas {
     private final GameManager game;
     private final GraphicsContext g;
 
+    private final Image floorImage = new Image(
+            GameView.class.getResourceAsStream("/images/floor04.png")
+    );
+
     // ================= ICON HUD =================
     // Có thể thay đổi đường dẫn ảnh tại đây
 
@@ -83,12 +87,14 @@ public class GameView extends Canvas {
 
                 char tile = map.get(c, r);
 
-                // Vẽ nền
-                g.setFill((r + c) % 2 == 0
-                        ? Color.web("#334155")
-                        : Color.web("#293548"));
-
-                g.fillRect(x, y, t, t);
+                // Vẽ nền đất chung cho cả 4 mùa
+                g.drawImage(
+                        floorImage,
+                        x,
+                        y,
+                        t,
+                        t
+                );
 
 // Vẽ Wall với texture ngẫu nhiên đã lưu trong GameMap
                 if (tile == '#') {

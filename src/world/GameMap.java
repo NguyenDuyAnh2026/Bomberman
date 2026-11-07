@@ -10,7 +10,7 @@ public class GameMap {
     private int portalR = -1;
     private final Image[][] wallImages;
     // Constructor dùng map TXT
-    public GameMap(char[][] data) {
+    public GameMap(char[][] data, int season) {
 
         if (data == null || data.length == 0) {
             throw new IllegalArgumentException("Map không được rỗng");
@@ -46,7 +46,7 @@ public class GameMap {
 
                 // Random ảnh tường một lần khi tạo map
                 if (tile == '#') {
-                    wallImages[r][c] = Wall.randomImage();
+                    wallImages[r][c] = Wall.randomImage(season);
                 }
             }
         }
