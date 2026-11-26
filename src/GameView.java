@@ -159,15 +159,78 @@ public class GameView extends Canvas {
 
         for (GameManager.Flame f : game.getFlames()) {
 
-            g.drawImage(
-                    GameManager.Flame.IMAGE,
-                    f.col * t,
-                    f.row * t,
-                    t,
-                    t
-            );
-        }
+            if (!f.isActive()) continue;
 
+            Image flameImage = f.getCurrentFrame();
+
+            double x = f.col * t;
+            double y = f.row * t;
+
+            // Tâm vụ nổ: phóng lớn một chút
+            if (f.type == GameManager.Flame.Type.CENTER) {
+
+                double scale = 1.2;
+
+                double size = t * scale;
+
+                g.drawImage(
+                        flameImage,
+                        x - (size - t) / 2,
+                        y - (size - t) / 2,
+                        size,
+                        size
+                );
+
+            } else if (f.type == GameManager.Flame.Type.END) {
+
+                // Xoay đầu tia theo hướng
+                double angle = 0;
+
+                switch (f.direction) {
+                    case RIGHT:
+                        angle = 0;
+                        break;
+
+                    case DOWN:
+                        angle = 90;
+                        break;
+
+                    case LEFT:
+                        angle = 180;
+                        break;
+
+                    case UP:
+                        angle = 270;
+                        break;
+                }
+
+                g.save();
+
+                g.translate(x + t / 2, y + t / 2);
+                g.rotate(angle);
+
+                g.drawImage(
+                        flameImage,
+                        -t / 2,
+                        -t / 2,
+                        t,
+                        t
+                );
+
+                g.restore();
+
+            } else {
+
+                // BODY: thân tia
+                g.drawImage(
+                        flameImage,
+                        x,
+                        y,
+                        t,
+                        t
+                );
+            }
+        }
 
         // ================= VẼ ENEMY =================
 
