@@ -18,6 +18,10 @@ public class GameView extends Canvas {
     private final GameManager game;
     private final GraphicsContext g;
 
+    private final Image floorImage = new Image(
+            GameView.class.getResourceAsStream("/images/floor04.png")
+    );
+
     // ================= ICON HUD =================
 
     private final Image heartIcon =

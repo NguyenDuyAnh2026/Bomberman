@@ -12,6 +12,7 @@ import javafx.scene.image.Image;
 import world.MapLoader;
 
 import java.util.*;
+import pathfinding.PathFinder;
 
 public class GameManager {
     private GameMap map;
@@ -148,6 +149,8 @@ public class GameManager {
 
         // ===== BOM NỔ =====
 
+        List<Bomb> expiredBombs = new ArrayList<>();
+
         Iterator<Bomb> it = bombs.iterator();
 
         while (it.hasNext()) {
@@ -156,25 +159,36 @@ public class GameManager {
             b.timer -= dt;
 
             if (b.timer <= 0) {
-                explode(b);
+                expiredBombs.add(b);
                 it.remove();
             }
         }
 
-        // ===== LỬA =====
+        // Kích nổ các bom hết thời gian và xử lý chain reaction
+        if (!expiredBombs.isEmpty()) {
+            detonateBombs(expiredBombs);
+        }
 
+        // ===== LỬA =====
         Iterator<Flame> fi = flames.iterator();
 
         while (fi.hasNext()) {
             Flame f = fi.next();
 
-            f.timer -= dt;
+            // Chờ lửa xuất hiện
+            if (f.delay > 0) {
+                f.delay -= dt;
+            }
 
-            if (f.timer <= 0) {
-                fi.remove();
+            // Khi lửa đã xuất hiện
+            else {
+                f.timer -= dt;
+
+                if (f.timer <= 0) {
+                    fi.remove();
+                }
             }
         }
-
         // ===== QUÁI DI CHUYỂN =====
 
         for (Enemy e : enemies) {
@@ -204,14 +218,18 @@ public class GameManager {
             if (!e.moving && e.timer <= 0) {
 
                 if (e instanceof ChasingEnemy) {
+
                     int playerCol = (int) Math.round(player.x);
                     int playerRow = (int) Math.round(player.y);
 
-                    int dx = playerCol - e.col;
-                    int dy = playerRow - e.row;
+                    List<int[]> path = PathFinder.findPath(
+                            map,
+                            e.col, e.row,
+                            playerCol, playerRow
+                    );
 
-                    int nx = e.col;
-                    int ny = e.row;
+                    if (!path.isEmpty()) {
+                        int[] nextStep = path.get(0);
 
                     if (Math.abs(dx) > Math.abs(dy)) {
                         nx += Integer.signum(dx);
@@ -221,10 +239,11 @@ public class GameManager {
                         nx += Integer.signum(dx);
                     }
 
-                    if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
-                        e.targetCol = nx;
-                        e.targetRow = ny;
-                        e.moving = true;
+                        if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
+                            e.targetCol = nx;
+                            e.targetRow = ny;
+                            e.moving = true;
+                        }
                     }
 
                     e.timer = 0.2;
@@ -255,6 +274,7 @@ public class GameManager {
         // ===== KIỂM TRA LỬA TRÚNG NHÂN VẬT =====
 
         for (Flame f : flames) {
+
             if (player.col == f.col && player.row == f.row) {
                 player.lives--;
 
@@ -317,33 +337,131 @@ public class GameManager {
         );
     }
 
-    private void explode(Bomb b) {
+// ===== XỬ LÝ NỔ BOM VÀ CHAIN REACTION =====
+
+    private void detonateBombs(List<Bomb> initialBombs) {
+
+        Queue<Bomb> queue = new ArrayDeque<>();
+        Set<Bomb> scheduledBombs = new HashSet<>();
+
+        // Đưa những bom ban đầu vào hàng đợi
+        for (Bomb b : initialBombs) {
+            if (scheduledBombs.add(b)) {
+                queue.add(b);
+            }
+        }
+
+        // Xử lý lần lượt các bom trong hàng đợi
+        while (!queue.isEmpty()) {
+
+            Bomb b = queue.poll();
+
+            explode(b, queue, scheduledBombs);
+        }
+
+        // Xóa tất cả bom đã phát nổ khỏi danh sách
+        bombs.removeAll(scheduledBombs);
+    }
+
+
+    // Tìm bom tại một tọa độ
+    private Bomb findBombAt(int col, int row) {
+
+        for (Bomb b : bombs) {
+            if (b.col == col && b.row == row) {
+                return b;
+            }
+        }
+
+        return null;
+    }
+
+
+    // Xử lý vùng nổ của một quả bom
+    private void explode(
+            Bomb b,
+            Queue<Bomb> queue,
+            Set<Bomb> scheduledBombs
+    ) {
+
         SoundManager.playBomb();
 
-        addFlame(b.col, b.row);
+        // Tâm vụ nổ
+        addFlame(
+                b.col, b.row, 0,
+                Flame.Type.CENTER,
+                Flame.Direction.NONE
+        );
 
         int[][] dirs = {
-                {1, 0},
-                {-1, 0},
-                {0, 1},
-                {0, -1}
+                {1, 0},    // Phải
+                {-1, 0},   // Trái
+                {0, 1},    // Xuống
+                {0, -1}    // Lên
         };
 
-        for (int[] d : dirs) {
+        Flame.Direction[] directions = {
+                Flame.Direction.RIGHT,
+                Flame.Direction.LEFT,
+                Flame.Direction.DOWN,
+                Flame.Direction.UP
+        };
+
+        for (int dirIndex = 0; dirIndex < dirs.length; dirIndex++) {
+
+            int[] d = dirs[dirIndex];
+            Flame.Direction direction = directions[dirIndex];
+
             for (int i = 1; i <= b.range; i++) {
+
                 int x = b.col + d[0] * i;
                 int y = b.row + d[1] * i;
 
                 char tile = map.get(x, y);
 
+                // Gặp tường cứng: dừng nhánh lửa
                 if (tile == '#') {
                     break;
                 }
 
+                // Kiểm tra xem đây có phải đầu nhánh lửa không
+                int nextX = x + d[0];
+                int nextY = y + d[1];
+
+                char nextTile = map.get(nextX, nextY);
+
+                boolean isEnd =
+                        i == b.range
+                                || nextTile == '#'
+                                || nextTile == 'B';
+
+                Flame.Type type = isEnd
+                        ? Flame.Type.END
+                        : Flame.Type.BODY;
+
+                // Tạo lửa, delay tăng theo khoảng cách
+                addFlame(
+                        x, y, i * 0.025,
+                        type,
+                        direction
+                );
+
+                // Kích nổ bom khác nếu bị lửa chạm
+                Bomb otherBomb = findBombAt(x, y);
+
+                if (otherBomb != null
+                        && scheduledBombs.add(otherBomb)) {
+
+                    queue.add(otherBomb);
+                }
+
+                // Gặp Brick: phá gạch và dừng nhánh
                 if (tile == 'B') {
+
                     map.set(x, y, '.');
 
                     if (random.nextDouble() < 0.35) {
+
                         String[] types = {
                                 "BOMB",
                                 "FLAME",
@@ -358,17 +476,16 @@ public class GameManager {
                         ));
                     }
 
-                    addFlame(x, y);
                     break;
                 }
-
-                addFlame(x, y);
             }
         }
     }
 
-    private void addFlame(int c, int r) {
-        flames.add(new Flame(c, r));
+    private void addFlame(int c, int r, double delay,
+                          Flame.Type type, Flame.Direction direction) {
+
+        flames.add(new Flame(c, r, delay, type, direction));
     }
 
     private void collectPickup(int c, int r) {
@@ -448,11 +565,50 @@ public class GameManager {
         );
 
         public final int col, row;
-        public double timer = 0.55;
+        public final Type type;
+        public final Direction direction;
 
-        public Flame(int c, int r) {
-            col = c;
-            row = r;
+        public double delay;
+        public double timer = 0.45;
+        public double animationTimer = 0;
+
+        public Flame(int col, int row, double delay,
+                     Type type, Direction direction) {
+
+            this.col = col;
+            this.row = row;
+            this.delay = delay;
+            this.type = type;
+            this.direction = direction;
+        }
+
+        public boolean isActive() {
+            return delay <= 0;
+        }
+
+        public Image getCurrentFrame() {
+
+            int frameIndex = (int)(animationTimer / 0.08) % 4;
+
+            switch (type) {
+
+                case CENTER:
+                    return CENTER_FRAMES[frameIndex];
+
+                case BODY:
+                    if (direction == Direction.LEFT
+                            || direction == Direction.RIGHT) {
+                        return HORIZONTAL_FRAMES[frameIndex];
+                    }
+
+                    return VERTICAL_FRAMES[frameIndex];
+
+                case END:
+                    return END_FRAMES[frameIndex];
+
+                default:
+                    return CENTER_FRAMES[0];
+            }
         }
     }
 
