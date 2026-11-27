@@ -231,13 +231,8 @@ public class GameManager {
                     if (!path.isEmpty()) {
                         int[] nextStep = path.get(0);
 
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        nx += Integer.signum(dx);
-                    } else if (dy != 0) {
-                        ny += Integer.signum(dy);
-                    } else if (dx != 0) {
-                        nx += Integer.signum(dx);
-                    }
+                        int nx = nextStep[0];
+                        int ny = nextStep[1];
 
                         if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
                             e.targetCol = nx;
@@ -560,11 +555,50 @@ public class GameManager {
     }
 
     public static class Flame {
-        public static final Image IMAGE = new Image(
-                Flame.class.getResourceAsStream("/images/flame3.png")
-        );
 
+        // ===== FLAME TYPE =====
+        public enum Type {
+            CENTER, BODY, END
+        }
+
+        // ===== FLAME DIRECTION =====
+        public enum Direction {
+            NONE, LEFT, RIGHT, UP, DOWN
+        }
+
+        // ===== EXPLOSION ANIMATION FRAMES =====
+        public static final Image[] CENTER_FRAMES =
+                loadFrames("/images/explosion/center/");
+
+        public static final Image[] HORIZONTAL_FRAMES =
+                loadFrames("/images/explosion/horizontal/");
+
+        public static final Image[] VERTICAL_FRAMES =
+                loadFrames("/images/explosion/vertical/");
+
+        public static final Image[] END_FRAMES =
+                loadFrames("/images/explosion/end/");
+
+        // ===== LOAD 4 FRAMES =====
+        private static Image[] loadFrames(String folder) {
+
+            Image[] frames = new Image[4];
+
+            for (int i = 0; i < 4; i++) {
+
+                String path = folder + "frame" + (i + 1) + ".png";
+
+                frames[i] = new Image(
+                        Flame.class.getResourceAsStream(path)
+                );
+            }
+
+            return frames;
+        }
+
+        // ===== FLAME POSITION & STATE =====
         public final int col, row;
+
         public final Type type;
         public final Direction direction;
 
@@ -572,6 +606,7 @@ public class GameManager {
         public double timer = 0.45;
         public double animationTimer = 0;
 
+        // ===== CONSTRUCTOR =====
         public Flame(int col, int row, double delay,
                      Type type, Direction direction) {
 
@@ -582,13 +617,15 @@ public class GameManager {
             this.direction = direction;
         }
 
+        // ===== CHECK FLAME ACTIVE =====
         public boolean isActive() {
             return delay <= 0;
         }
 
+        // ===== GET CURRENT ANIMATION FRAME =====
         public Image getCurrentFrame() {
 
-            int frameIndex = (int)(animationTimer / 0.08) % 4;
+            int frameIndex = (int) (animationTimer / 0.08) % 4;
 
             switch (type) {
 
@@ -598,6 +635,7 @@ public class GameManager {
                 case BODY:
                     if (direction == Direction.LEFT
                             || direction == Direction.RIGHT) {
+
                         return HORIZONTAL_FRAMES[frameIndex];
                     }
 
@@ -611,7 +649,6 @@ public class GameManager {
             }
         }
     }
-
     // ===== LOAD LEVEL =====
 
     private void loadLevel(String filePath) {

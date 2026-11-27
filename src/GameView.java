@@ -150,8 +150,13 @@ public class GameView extends Canvas {
         // ================= VẼ FLAMES =================
 
         for (GameManager.Flame f : game.getFlames()) {
+
+            if (!f.isActive()) {
+                continue;
+            }
+
             g.drawImage(
-                    GameManager.Flame.IMAGE,
+                    f.getCurrentFrame(),
                     f.col * t,
                     f.row * t,
                     t,
