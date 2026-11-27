@@ -21,6 +21,7 @@ public class GameManager {
     private int playerStartCol = 1;
     private int playerStartRow = 1;
     private final int MAX_LEVEL = 4;
+
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Bomb> bombs = new ArrayList<>();
     private final List<Flame> flames = new ArrayList<>();
@@ -102,6 +103,29 @@ public class GameManager {
             }
         }
 
+        // ===== CẬP NHẬT ANIMATION NARUTO =====
+
+        boolean moving = player.moveProgress < 1.0;
+
+        Bomber.Direction direction = Bomber.Direction.DOWN;
+
+        if (moving) {
+            double dx = player.col - player.startX;
+            double dy = player.row - player.startY;
+
+            if (dx > 0) {
+                direction = Bomber.Direction.RIGHT;
+            } else if (dx < 0) {
+                direction = Bomber.Direction.LEFT;
+            } else if (dy > 0) {
+                direction = Bomber.Direction.DOWN;
+            } else if (dy < 0) {
+                direction = Bomber.Direction.UP;
+            }
+        }
+
+        player.updateBomberAnimation(dt, moving, direction);
+
         // ===== ĐẶT BOM =====
 
         boolean space = input.space();
@@ -170,7 +194,6 @@ public class GameManager {
         for (Enemy e : enemies) {
             e.timer -= dt;
 
-            // Enemy đang di chuyển mượt đến ô mục tiêu
             if (e.moving) {
                 double dx = e.targetCol - e.x;
                 double dy = e.targetRow - e.y;
@@ -192,12 +215,8 @@ public class GameManager {
                 }
             }
 
-            // Enemy sử dụng A* để tìm đường đến người chơi
-// Chỉ chọn bước đi mới khi enemy đã đứng yên
-// và timer đã hết
             if (!e.moving && e.timer <= 0) {
 
-                // ===== CHASING ENEMY: A* =====
                 if (e instanceof ChasingEnemy) {
 
                     int playerCol = (int) Math.round(player.x);
@@ -212,8 +231,13 @@ public class GameManager {
                     if (!path.isEmpty()) {
                         int[] nextStep = path.get(0);
 
-                        int nx = nextStep[0];
-                        int ny = nextStep[1];
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        nx += Integer.signum(dx);
+                    } else if (dy != 0) {
+                        ny += Integer.signum(dy);
+                    } else if (dx != 0) {
+                        nx += Integer.signum(dx);
+                    }
 
                         if (map.isWalkable(nx, ny) && !bombAt(nx, ny)) {
                             e.targetCol = nx;
@@ -223,11 +247,7 @@ public class GameManager {
                     }
 
                     e.timer = 0.2;
-                }
-
-                // ===== ENEMY THƯỜNG: RANDOM =====
-                else {
-
+                } else {
                     int[][] dirs = {
                             {1, 0},
                             {-1, 0},
@@ -250,6 +270,8 @@ public class GameManager {
                 }
             }
         }
+
+        // ===== KIỂM TRA LỬA TRÚNG NHÂN VẬT =====
 
         for (Flame f : flames) {
 
@@ -286,7 +308,6 @@ public class GameManager {
             }
         }
 
-
         // ===== KIỂM TRA CHUYỂN MÀN =====
 
         if (enemies.isEmpty()
@@ -298,14 +319,14 @@ public class GameManager {
     }
 
     private void resetPlayerPosition() {
-        player.col = 1;
-        player.row = 1;
+        player.col = playerStartCol;
+        player.row = playerStartRow;
 
-        player.x = 1;
-        player.y = 1;
+        player.x = playerStartCol;
+        player.y = playerStartRow;
 
-        player.startX = 1;
-        player.startY = 1;
+        player.startX = playerStartCol;
+        player.startY = playerStartRow;
 
         player.moveProgress = 1.0;
     }
@@ -539,32 +560,9 @@ public class GameManager {
     }
 
     public static class Flame {
-
-        public enum Type {
-            CENTER, BODY, END
-        }
-
-        public enum Direction {
-            NONE, LEFT, RIGHT, UP, DOWN
-        }
-
-        public static final Image[] CENTER_FRAMES = loadFrames("/images/explosion/center/");
-        public static final Image[] HORIZONTAL_FRAMES = loadFrames("/images/explosion/horizontal/");
-        public static final Image[] VERTICAL_FRAMES = loadFrames("/images/explosion/vertical/");
-        public static final Image[] END_FRAMES = loadFrames("/images/explosion/end/");
-        private static Image[] loadFrames(String folder) {
-            Image[] frames = new Image[4];
-
-            for (int i = 0; i < 4; i++) {
-                String path = folder + "frame" + (i + 1) + ".png";
-
-                frames[i] = new Image(
-                        Flame.class.getResourceAsStream(path)
-                );
-            }
-
-            return frames;
-        }
+        public static final Image IMAGE = new Image(
+                Flame.class.getResourceAsStream("/images/flame3.png")
+        );
 
         public final int col, row;
         public final Type type;
@@ -614,57 +612,55 @@ public class GameManager {
         }
     }
 
-//loadlevel
-private void loadLevel(String filePath) {
-    char[][] data = MapLoader.loadMap(filePath);
+    // ===== LOAD LEVEL =====
 
-// currentLevel tương ứng mùa:
-// 1 = Spring, 2 = Summer, 3 = Autumn, 4 = Winter
-    map = new GameMap(data, currentLevel);
+    private void loadLevel(String filePath) {
+        char[][] data = MapLoader.loadMap(filePath);
 
-    enemies.clear();
-    bombs.clear();
-    flames.clear();
-    pickups.clear();
+        map = new GameMap(data, currentLevel);
 
-    player = null;
+        enemies.clear();
+        bombs.clear();
+        flames.clear();
+        pickups.clear();
 
-    for (int row = 0; row < data.length; row++) {
-        for (int col = 0; col < data[row].length; col++) {
+        player = null;
 
-            char tile = data[row][col];
+        for (int row = 0; row < data.length; row++) {
+            for (int col = 0; col < data[row].length; col++) {
 
-            switch (tile) {
-                case 'P':
-                    player = new Bomber(col, row);
+                char tile = data[row][col];
 
-                    playerStartCol = col;
-                    playerStartRow = row;
-                    break;
+                switch (tile) {
+                    case 'P':
+                        player = new Bomber(col, row);
 
-                case 'E':
-                    enemies.add(new Enemy(col, row));
-                    break;
+                        playerStartCol = col;
+                        playerStartRow = row;
+                        break;
 
-                case 'C':
-                    enemies.add(new ChasingEnemy(col, row));
-                    break;
+                    case 'E':
+                        enemies.add(new Enemy(col, row));
+                        break;
 
+                    case 'C':
+                        enemies.add(new ChasingEnemy(col, row));
+                        break;
+                }
             }
         }
+
+        if (player == null) {
+            throw new RuntimeException(
+                    "Map không có vị trí Player: " + filePath
+            );
+        }
+
+        bombCooldown = 0;
+        spaceWasDown = false;
+
+        state = GameState.PLAYING;
     }
-
-    if (player == null) {
-        throw new RuntimeException(
-                "Map không có vị trí Player: " + filePath
-        );
-    }
-
-    bombCooldown = 0;
-    spaceWasDown = false;
-
-    state = GameState.PLAYING;
-}
 
     public void nextLevel() {
         if (currentLevel >= MAX_LEVEL) {
@@ -678,7 +674,6 @@ private void loadLevel(String filePath) {
                 "resources/map/map" + currentLevel + ".txt"
         );
     }
-
 
     public static class Pickup {
 
