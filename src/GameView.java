@@ -1,3 +1,4 @@
+
 import core.GameManager;
 import core.GameState;
 import entities.ChasingEnemy;
@@ -9,9 +10,7 @@ import javafx.scene.image.Image;
 import world.GameMap;
 import entities.Bomb;
 import entities.Enemy;
-import entities.Bomber;
 import world.Portal;
-import world.Wall;
 import world.Brick;
 
 public class GameView extends Canvas {
@@ -20,7 +19,6 @@ public class GameView extends Canvas {
     private final GraphicsContext g;
 
     // ================= ICON HUD =================
-    // Có thể thay đổi đường dẫn ảnh tại đây
 
     private final Image heartIcon =
             loadIcon("/images/heart_icon.png");
@@ -34,7 +32,6 @@ public class GameView extends Canvas {
     private final Image enemyIcon =
             loadIcon("/images/quai.png");
 
-
     // Load ảnh an toàn, tránh crash nếu ảnh không tồn tại
     private Image loadIcon(String path) {
         var stream = getClass().getResourceAsStream(path);
@@ -46,7 +43,6 @@ public class GameView extends Canvas {
 
         return new Image(stream);
     }
-
 
     public GameView(GameManager game) {
         super(
@@ -60,7 +56,6 @@ public class GameView extends Canvas {
         render();
     }
 
-
     public void render() {
 
         GameMap map = game.getMap();
@@ -70,7 +65,6 @@ public class GameView extends Canvas {
 
         g.setFill(Color.web("#101827"));
         g.fillRect(0, 0, getWidth(), getHeight());
-
 
         // ================= VẼ MAP =================
 
@@ -83,47 +77,47 @@ public class GameView extends Canvas {
 
                 char tile = map.get(c, r);
 
-                // Vẽ nền
-                g.setFill((r + c) % 2 == 0
-                        ? Color.web("#334155")
-                        : Color.web("#293548"));
+                // Vẽ nền đất
+                if (tile == '.') {
+                    g.drawImage(
+                            map.getGroundImage(c, r),
+                            x, y, t, t
+                    );
+                }
 
-                g.fillRect(x, y, t, t);
-
-// Vẽ Wall với texture ngẫu nhiên đã lưu trong GameMap
+                // Vẽ Wall
                 if (tile == '#') {
                     g.drawImage(
                             map.getWallImage(c, r),
-                            x,
-                            y,
-                            t,
-                            t
+                            x, y, t, t
                     );
                 }
 
-// Vẽ Brick
+                // Vẽ Brick
                 if (tile == 'B') {
                     g.drawImage(
                             Brick.IMAGE,
-                            x,
-                            y,
-                            t,
-                            t
+                            x, y, t, t
                     );
                 }
 
-// Vẽ Portal
+                // Vẽ Portal
                 if (tile == 'O') {
 
                     if (game.getEnemies().isEmpty()) {
-                        g.drawImage(Portal.OPEN_IMAGE, x, y, t, t);
+                        g.drawImage(
+                                Portal.OPEN_IMAGE,
+                                x, y, t, t
+                        );
                     } else {
-                        g.drawImage(Portal.CLOSED_IMAGE, x, y, t, t);
+                        g.drawImage(
+                                Portal.CLOSED_IMAGE,
+                                x, y, t, t
+                        );
                     }
                 }
             }
         }
-
 
         // ================= VẼ PICKUP =================
 
@@ -136,9 +130,10 @@ public class GameView extends Canvas {
                     t
             );
         }
-        // Vẽ bom
-        for (Bomb b : game.getBombs()) {
 
+        // ================= VẼ BOM =================
+
+        for (Bomb b : game.getBombs()) {
             g.drawImage(
                     Bomb.IMAGE,
                     b.col * t,
@@ -148,11 +143,9 @@ public class GameView extends Canvas {
             );
         }
 
-
         // ================= VẼ FLAMES =================
 
         for (GameManager.Flame f : game.getFlames()) {
-
             g.drawImage(
                     GameManager.Flame.IMAGE,
                     f.col * t,
@@ -162,13 +155,11 @@ public class GameView extends Canvas {
             );
         }
 
-
         // ================= VẼ ENEMY =================
 
         for (Enemy e : game.getEnemies()) {
 
             if (e instanceof ChasingEnemy) {
-
                 g.drawImage(
                         ChasingEnemy.IMAGE,
                         e.x * t,
@@ -176,9 +167,7 @@ public class GameView extends Canvas {
                         t,
                         t
                 );
-
             } else {
-
                 g.drawImage(
                         Enemy.IMAGE,
                         e.x * t,
@@ -189,7 +178,6 @@ public class GameView extends Canvas {
             }
         }
 
-
         // ================= VẼ PLAYER =================
 
         var p = game.getPlayer();
@@ -198,13 +186,12 @@ public class GameView extends Canvas {
         double py = p.y * t;
 
         g.drawImage(
-                Bomber.IMAGE,
+                p.getCurrentImage(),
                 px,
                 py,
                 t,
                 t
         );
-
 
         // ================= HUD =================
 
@@ -219,11 +206,9 @@ public class GameView extends Canvas {
                 42
         );
 
-
         // Font chính
         g.setFont(Font.font("Arial", 17));
         g.setFill(Color.WHITE);
-
 
         // ---------- LIVES ----------
 
@@ -245,7 +230,6 @@ public class GameView extends Canvas {
                 hudY + 27
         );
 
-
         // ---------- BOMBS ----------
 
         if (bombIcon != null) {
@@ -265,7 +249,6 @@ public class GameView extends Canvas {
                 135,
                 hudY + 27
         );
-
 
         // ---------- FLAME RANGE ----------
 
@@ -287,7 +270,6 @@ public class GameView extends Canvas {
                 hudY + 27
         );
 
-
         // ---------- ENEMIES ----------
 
         if (enemyIcon != null) {
@@ -308,7 +290,6 @@ public class GameView extends Canvas {
                 hudY + 27
         );
 
-
         // ---------- CONTROLS ----------
 
         g.setFill(Color.web("#CBD5E1"));
@@ -319,7 +300,6 @@ public class GameView extends Canvas {
                 420,
                 hudY + 27
         );
-
 
         // ================= PAUSE SCREEN =================
 

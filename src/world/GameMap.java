@@ -5,13 +5,14 @@ public class GameMap {
     private final char[][] tiles;
 
     private final int tileSize = 50;
-
+    private final int season;
     private int portalC = -1;
     private int portalR = -1;
     private final Image[][] wallImages;
+    private final Image[][] groundImages;
     // Constructor dùng map TXT
-    public GameMap(char[][] data) {
-
+    public GameMap(char[][] data, int season) {
+        this.season = season;
         if (data == null || data.length == 0) {
             throw new IllegalArgumentException("Map không được rỗng");
         }
@@ -20,7 +21,7 @@ public class GameMap {
 
         tiles = new char[data.length][cols];
         wallImages = new Image[data.length][cols];
-
+        groundImages = new Image[data.length][cols];
         for (int r = 0; r < data.length; r++) {
             for (int c = 0; c < cols; c++) {
 
@@ -46,7 +47,10 @@ public class GameMap {
 
                 // Random ảnh tường một lần khi tạo map
                 if (tile == '#') {
-                    wallImages[r][c] = Wall.randomImage();
+                    wallImages[r][c] = Wall.randomImage(season);
+                }
+                if (tiles[r][c] == '.') {
+                    groundImages[r][c] = Ground.randomImage(season);
                 }
             }
         }
@@ -69,6 +73,11 @@ public class GameMap {
                 && c >= 0 && c < tiles[0].length) {
 
             tiles[r][c] = v;
+
+            // Khi Brick bị phá và chuyển thành Ground
+            if (v == '.') {
+                groundImages[r][c] = Ground.randomImage(season);
+            }
         }
     }
 
@@ -83,6 +92,9 @@ public class GameMap {
 
     public Image getWallImage(int c, int r) {
         return wallImages[r][c];
+    }
+    public Image getGroundImage(int c, int r) {
+        return groundImages[r][c];
     }
     public int rows() {
         return tiles.length;

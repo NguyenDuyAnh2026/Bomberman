@@ -10,7 +10,7 @@ public final class MapLoader {
     private MapLoader() {
     }
     public static GameMap loadDefault() {
-        return new GameMap(loadMap("resources/map/map1.txt"));
+        return new GameMap(loadMap("resources/map/map1.txt"), 1);
     }
     public static char[][] loadMap(String filePath) {
         List<char[]> rows = new ArrayList<>();
