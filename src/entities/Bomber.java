@@ -9,7 +9,7 @@ public class Bomber extends MovingEntity {
     public int maxBombs = 1;
     public int flameRange = 2;
 
-    public double moveSpeed = 0.1;
+    public double moveSpeed = 0.2;
 
     public double x, y;
     public double startX, startY;

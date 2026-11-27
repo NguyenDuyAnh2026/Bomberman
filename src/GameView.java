@@ -163,7 +163,6 @@ public class GameView extends Canvas {
                     t
             );
         }
-
         // ================= VẼ ENEMY =================
 
         for (Enemy e : game.getEnemies()) {

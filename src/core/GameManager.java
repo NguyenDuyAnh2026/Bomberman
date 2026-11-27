@@ -178,11 +178,18 @@ public class GameManager {
             // Chờ lửa xuất hiện
             if (f.delay > 0) {
                 f.delay -= dt;
+
+                if (f.delay < 0) {
+                    f.delay = 0;
+                }
             }
 
             // Khi lửa đã xuất hiện
             else {
                 f.timer -= dt;
+
+                // Cập nhật animation
+                f.animationTimer += dt;
 
                 if (f.timer <= 0) {
                     fi.remove();
@@ -430,9 +437,7 @@ public class GameManager {
                                 || nextTile == '#'
                                 || nextTile == 'B';
 
-                Flame.Type type = isEnd
-                        ? Flame.Type.END
-                        : Flame.Type.BODY;
+                Flame.Type type = Flame.Type.BODY;
 
                 // Tạo lửa, delay tăng theo khoảng cách
                 addFlame(
@@ -557,8 +562,9 @@ public class GameManager {
     public static class Flame {
 
         // ===== FLAME TYPE =====
+
         public enum Type {
-            CENTER, BODY, END
+            CENTER, BODY
         }
 
         // ===== FLAME DIRECTION =====
@@ -575,9 +581,6 @@ public class GameManager {
 
         public static final Image[] VERTICAL_FRAMES =
                 loadFrames("/images/explosion/vertical/");
-
-        public static final Image[] END_FRAMES =
-                loadFrames("/images/explosion/end/");
 
         // ===== LOAD 4 FRAMES =====
         private static Image[] loadFrames(String folder) {
@@ -640,9 +643,6 @@ public class GameManager {
                     }
 
                     return VERTICAL_FRAMES[frameIndex];
-
-                case END:
-                    return END_FRAMES[frameIndex];
 
                 default:
                     return CENTER_FRAMES[0];
